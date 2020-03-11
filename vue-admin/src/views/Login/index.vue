@@ -3,11 +3,13 @@
         <div class="login-wrap">
             <ul class="menu-tab">
                 <li
-                    :class="{'current':item.current}"
+                    :class="{ current: item.current }"
                     v-for="(item, index) in menuTab"
                     :key="index"
                     @click="toggleMenu(item)"
-                >{{ item.txt }}</li>
+                >
+                    {{ item.txt }}
+                </li>
             </ul>
             <el-form
                 :model="ruleForm"
@@ -19,7 +21,11 @@
             >
                 <el-form-item prop="username" class="item-form">
                     <label for>邮箱</label>
-                    <el-input type="text" v-model="ruleForm.username" autocomplete="off"></el-input>
+                    <el-input
+                        type="text"
+                        v-model="ruleForm.username"
+                        autocomplete="off"
+                    ></el-input>
                 </el-form-item>
                 <el-form-item prop="password" class="item-form">
                     <label for>密码</label>
@@ -31,7 +37,11 @@
                         maxlength="20"
                     ></el-input>
                 </el-form-item>
-                <el-form-item prop="confirmPassword" class="item-form" v-if="model==='register'">
+                <el-form-item
+                    prop="confirmPassword"
+                    class="item-form"
+                    v-if="model === 'register'"
+                >
                     <label for>重复密码</label>
                     <el-input
                         type="text"
@@ -46,7 +56,9 @@
                     <el-row :gutter="12">
                         <el-col :span="16">
                             <div class="grid-content bg-purple">
-                                <el-input v-model.number="ruleForm.code"></el-input>
+                                <el-input
+                                    v-model.number="ruleForm.code"
+                                ></el-input>
                             </div>
                         </el-col>
                         <el-col :span="8">
@@ -55,13 +67,19 @@
                                     type="success"
                                     @click="submitForm('ruleForm')"
                                     class="block"
-                                >验证码</el-button>
+                                    >验证码</el-button
+                                >
                             </div>
                         </el-col>
                     </el-row>
                 </el-form-item>
                 <el-form-item class="item-form submit">
-                    <el-button type="danger" @click="submitForm('ruleForm')" class="block">提交</el-button>
+                    <el-button
+                        type="danger"
+                        @click="submitForm('ruleForm')"
+                        class="block"
+                        >提交</el-button
+                    >
                 </el-form-item>
             </el-form>
         </div>
@@ -74,9 +92,11 @@ import {
     validatePass,
     validateCode
 } from "utils/validate";
+import { reactive, ref, isRef, onMounted } from "@vue/composition-api";
 export default {
-    data() {
-        var validateUsername = (rule, value, callback) => {
+    name: "login",
+    setup(props, { refs }) {
+        let validateUsername = (rule, value, callback) => {
             if (value === "") {
                 callback(new Error("请输入用户名"));
             } else if (!validateEmail(value)) {
@@ -85,9 +105,9 @@ export default {
                 callback();
             }
         };
-        var validatePassword = (rule, value, callback) => {
-            this.ruleForm.password = stripScript(value);
-            value = this.ruleForm.password;
+        let validatePassword = (rule, value, callback) => {
+            ruleForm.password = stripScript(value);
+            value = ruleForm.password;
             if (value === "") {
                 callback(new Error("请输入密码"));
             } else if (!validatePass(value)) {
@@ -96,20 +116,20 @@ export default {
                 callback();
             }
         };
-        var validateConfirmPassword = (rule, value, callback) => {
-            this.ruleForm.confirmPassword = stripScript(value);
-            value = this.ruleForm.confirmPassword;
+        let validateConfirmPassword = (rule, value, callback) => {
+            ruleForm.confirmPassword = stripScript(value);
+            value = ruleForm.confirmPassword;
             if (value === "") {
                 callback(new Error("请再次输入密码"));
-            } else if (value !== this.ruleForm.password) {
+            } else if (value !== ruleForm.password) {
                 callback(new Error("密码不一致!"));
             } else {
                 callback();
             }
         };
-        var checkCode = (rule, value, callback) => {
-            this.ruleForm.code = stripScript(value);
-            value = this.ruleForm.code;
+        let checkCode = (rule, value, callback) => {
+            ruleForm.code = stripScript(value);
+            value = ruleForm.code;
             if (!value) {
                 return callback(new Error("请输入验证码"));
             } else if (!validateCode(value)) {
@@ -118,40 +138,48 @@ export default {
                 callback();
             }
         };
-        return {
-            menuTab: [
-                { txt: "登录", current: true, type: "login" },
-                { txt: "注册", current: false, type: "register" }
-            ],
-            // isActive: 0,
-            model: "login",
-            ruleForm: {
-                username: "",
-                password: "",
-                code: "",
-                confirmPassword: ""
-            },
-            rules: {
-                username: [{ validator: validateUsername, trigger: "blur" }],
-                password: [{ validator: validatePassword, trigger: "blur" }],
-                code: [{ validator: checkCode, trigger: "blur" }],
-                confirmPassword: [
-                    { validator: validateConfirmPassword, trigger: "blur" }
-                ]
-            }
-        };
-    },
-    mounted() {},
-    methods: {
-        toggleMenu(params) {
-            this.menuTab.forEach(element => {
+        /* 这里放置data数据，生命周期，自定义的函数 */
+        console.log(props);
+        // console.log(context);
+        const menuTab = reactive([
+            { txt: "登录", current: true, type: "login" },
+            { txt: "注册", current: false, type: "register" }
+        ]);
+        // console.log(menuTab);
+        const model = ref("login");
+        // console.log(model);
+        console.log(isRef(model));
+        // const aa = reactive({
+        //     x: 1,
+        //     y: "ii"
+        // });
+        // const bb = toRefs(aa);
+        // console.log(bb.x.value);
+        const ruleForm = reactive({
+            username: "",
+            password: "",
+            code: "",
+            confirmPassword: ""
+        });
+        const rules = reactive({
+            username: [{ validator: validateUsername, trigger: "blur" }],
+            password: [{ validator: validatePassword, trigger: "blur" }],
+            code: [{ validator: checkCode, trigger: "blur" }],
+            confirmPassword: [
+                { validator: validateConfirmPassword, trigger: "blur" }
+            ]
+        });
+        onMounted(() => {});
+        const toggleMenu = params => {
+            console.log(params);
+            menuTab.forEach(element => {
                 element.current = false;
             });
             params.current = true;
-            this.model = params.type
-        },
-        submitForm(formName) {
-            this.$refs[formName].validate(valid => {
+            model.value = params.type;
+        };
+        const submitForm = formName => {
+            refs[formName].validate(valid => {
                 if (valid) {
                     alert("submit!");
                 } else {
@@ -159,7 +187,15 @@ export default {
                     return false;
                 }
             });
-        }
+        };
+        return {
+            menuTab,
+            model,
+            ruleForm,
+            rules,
+            toggleMenu,
+            submitForm
+        };
     }
 };
 </script>
