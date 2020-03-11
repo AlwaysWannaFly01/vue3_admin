@@ -31,6 +31,16 @@
                         maxlength="20"
                     ></el-input>
                 </el-form-item>
+                <el-form-item prop="confirmPassword" class="item-form" v-if="model==='register'">
+                    <label for>重复密码</label>
+                    <el-input
+                        type="text"
+                        v-model="ruleForm.confirmPassword"
+                        autocomplete="off"
+                        minlength="6"
+                        maxlength="20"
+                    ></el-input>
+                </el-form-item>
                 <el-form-item prop="code" class="item-form">
                     <label for>验证码</label>
                     <el-row :gutter="12">
@@ -58,41 +68,51 @@
     </div>
 </template>
 <script>
-import { stripScript } from "utils/validate";
+import {
+    stripScript,
+    validateEmail,
+    validatePass,
+    validateCode
+} from "utils/validate";
 export default {
     data() {
         var validateUsername = (rule, value, callback) => {
-            const reg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
             if (value === "") {
                 callback(new Error("请输入用户名"));
-            } else if (!reg.test(value)) {
+            } else if (!validateEmail(value)) {
                 callback(new Error("用户名格式有误!"));
-                // if (this.ruleForm.checkPass !== "") {
-                //     this.$refs.ruleForm.validateField("checkPass");
-                // }
             } else {
                 callback();
             }
         };
         var validatePassword = (rule, value, callback) => {
-            this.ruleForm.password = stripScript(value)
-            value = this.ruleForm.password
-            console.log(value);
-            
-            const reg = /[0-9a-zA-Z]{6,20}/;
+            this.ruleForm.password = stripScript(value);
+            value = this.ruleForm.password;
             if (value === "") {
                 callback(new Error("请输入密码"));
-            } else if (!reg.test(value)) {
+            } else if (!validatePass(value)) {
                 callback(new Error("密码为6-20位数字加字母"));
             } else {
                 callback();
             }
         };
+        var validateConfirmPassword = (rule, value, callback) => {
+            this.ruleForm.confirmPassword = stripScript(value);
+            value = this.ruleForm.confirmPassword;
+            if (value === "") {
+                callback(new Error("请再次输入密码"));
+            } else if (value !== this.ruleForm.password) {
+                callback(new Error("密码不一致!"));
+            } else {
+                callback();
+            }
+        };
         var checkCode = (rule, value, callback) => {
-            const reg = /^[a-z0-9]{6}$/;
+            this.ruleForm.code = stripScript(value);
+            value = this.ruleForm.code;
             if (!value) {
                 return callback(new Error("请输入验证码"));
-            } else if (!reg.test(value)) {
+            } else if (!validateCode(value)) {
                 callback(new Error("验证码格式有误!"));
             } else {
                 callback();
@@ -100,30 +120,35 @@ export default {
         };
         return {
             menuTab: [
-                { txt: "登录", current: true },
-                { txt: "注册", current: false }
+                { txt: "登录", current: true, type: "login" },
+                { txt: "注册", current: false, type: "register" }
             ],
-            isActive: 0,
+            // isActive: 0,
+            model: "login",
             ruleForm: {
                 username: "",
                 password: "",
-                code: ""
+                code: "",
+                confirmPassword: ""
             },
             rules: {
                 username: [{ validator: validateUsername, trigger: "blur" }],
                 password: [{ validator: validatePassword, trigger: "blur" }],
-                code: [{ validator: checkCode, trigger: "blur" }]
+                code: [{ validator: checkCode, trigger: "blur" }],
+                confirmPassword: [
+                    { validator: validateConfirmPassword, trigger: "blur" }
+                ]
             }
         };
     },
-    mounted() {
-    },
+    mounted() {},
     methods: {
         toggleMenu(params) {
             this.menuTab.forEach(element => {
                 element.current = false;
             });
             params.current = true;
+            this.model = params.type
         },
         submitForm(formName) {
             this.$refs[formName].validate(valid => {
